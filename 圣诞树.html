@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>粒子动态圣诞树</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a2e38 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        header {
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 400% 400%;
+            animation: rainbow 8s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a8e6cf;
+            margin-bottom: 20px;
+            text-shadow: 0 0 5px rgba(168, 230, 207, 0.5);
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            min-width: 500px;
+            max-width: 800px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            background: rgba(0, 20, 30, 0.7);
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 600px;
+        }
+        
+        .controls {
+            flex: 0 0 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .controls h2 {
+            color: #ffd166;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a8e6cf;
+            font-weight: bold;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+        }
+        
+        .value-display {
+            min-width: 40px;
+            text-align: center;
+            color: #ffd166;
+            font-weight: bold;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .info {
+            margin-top: 30px;
+            font-size: 1rem;
+            color: #b0bec5;
+            line-height: 1.6;
+            max-width: 800px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .info h3 {
+            color: #ffd166;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            margin-top: 30px;
+            color: #78909c;
+            font-size: 0.9rem;
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+        
+        @media (max-width: 900px) {
+            .content {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .canvas-container, .controls {
+                width: 100%;
+                max-width: 600px;
+            }
+            
+            .canvas-container {
+                min-width: unset;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .canvas-container {
+                min-width: unset;
+                height: 400px;
+            }
+            
+            canvas {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎄 圣诞树 🎄</h1>
+            <p class="subtitle">圣诞节快乐！</p>
+        </header>
+        
+        <div class="content">
+            <div class="canvas-container">
+                <canvas id="christmasTree"></canvas>
+            </div>
+            
+            <div class="controls">
+                <h2>🎅 控制面板</h2>
+                
+                <div class="control-group">
+                    <label for="particleCount">粒子数量: <span id="particleCountValue">800</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleCount" min="100" max="1500" value="800" step="50">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="particleSpeed">粒子速度: <span id="particleSpeedValue">1.0</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleSpeed" min="0.1" max="3.0" value="1.0" step="0.1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="particleSize">粒子大小: <span id="particleSizeValue">3</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="particleSize" min="1" max="8" value="3" step="0.5">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="colorTheme">颜色主题:</label>
+                    <div class="slider-container">
+                        <select id="colorTheme" style="width:100%; padding:8px; border-radius:5px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2);">
+                            <option value="traditional">传统红绿色</option>
+                            <option value="winter">冬日蓝白色</option>
+                            <option value="rainbow">彩虹色</option>
+                            <option value="golden">金色主题</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button id="toggleAnimation">暂停动画</button>
+                    <button id="addOrnaments">添加装饰</button>
+                    <button id="snowfall">下雪效果</button>
+                    <button id="resetTree">重置圣诞树</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h3>使用说明</h3>
+            <p>1. 调整控制面板中的滑块可以改变粒子数量、速度、大小和颜色主题。</p>
+            <p>2. 点击"暂停动画"按钮可以暂停/继续粒子动画。</p>
+            <p>3. 点击"添加装饰"按钮可以在圣诞树上添加装饰品。</p>
+            <p>4. 点击"下雪效果"按钮可以开启/关闭背景飘雪效果。</p>
+            <p>5. 将鼠标移动到圣诞树上方可以交互影响粒子运动。</p>
+            <p>6. 点击"重置圣诞树"按钮可以恢复默认设置。</p>
+        </div>
+        
+        <footer>
+            <p>© 2023 粒子动态圣诞树 | 使用HTML5 Canvas制作 | 祝您圣诞快乐，新年快乐！</p>
+        </footer>
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const canvas = document.getElementById('christmasTree');
+        const ctx = canvas.getContext('2d');
+        
+        // 设置Canvas尺寸
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        // 窗口调整大小时重置Canvas尺寸
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            // 重新生成粒子
+            generateTreeParticles();
+        });
+        
+        // 粒子系统
+        let particles = [];
+        let ornaments = [];
+        let snowflakes = [];
+        let animationId = null;
+        let isAnimating = true;
+        let isSnowing = false;
+        
+        // 控制变量
+        let particleCount = 800;
+        let particleSpeed = 1.0;
+        let particleSize = 3;
+        let colorTheme = 'traditional';
+        
+        // 颜色主题定义
+        const colorThemes = {
+            traditional: ['#ff0000', '#00ff00', '#ffffff', '#ffd700', '#ff6b6b'],
+            winter: ['#4dabf7', '#a5d8ff', '#ffffff', '#e7f5ff', '#b197fc'],
+            rainbow: ['#ff0000', '#ff8800', '#ffff00', '#00ff00', '#00ffff', '#0000ff', '#8800ff'],
+            golden: ['#ffd700', '#ffaa00', '#ff6b00', '#fff5cc', '#ffcc00']
+        };
+        
+        // 粒子类
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.originalX = x;
+                this.originalY = y;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.color = color;
+                this.size = Math.random() * particleSize + 1;
+                this.wander = 0.15;
+                this.drag = 0.92;
+                this.force = 0;
+                this.angle = 0;
+            }
+            
+            update(mouse) {
+                // 粒子向原始位置移动
+                let dx = this.originalX - this.x;
+                let dy = this.originalY - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // 施加恢复力
+                if (dist > 0) {
+                    this.vx += dx / dist * 0.01 * particleSpeed;
+                    this.vy += dy / dist * 0.01 * particleSpeed;
+                }
+                
+                // 随机漂移
+                this.vx += (Math.random() - 0.5) * this.wander * particleSpeed;
+                this.vy += (Math.random() - 0.5) * this.wander * particleSpeed;
+                
+                // 鼠标交互
+                if (mouse.x !== null && mouse.y !== null) {
+                    let mx = mouse.x - this.x;
+                    let my = mouse.y - this.y;
+                    let mdist = Math.sqrt(mx * mx + my * my);
+                    
+                    if (mdist < 100) {
+                        this.vx -= mx / mdist * 0.1 * particleSpeed;
+                        this.vy -= my / mdist * 0.1 * particleSpeed;
+                    }
+                }
+                
+                // 应用阻力
+                this.vx *= this.drag;
+                this.vy *= this.drag;
+                
+                // 更新位置
+                this.x += this.vx * particleSpeed;
+                this.y += this.vy * particleSpeed;
+                
+                // 角度变化（用于闪烁效果）
+                this.angle += 0.05;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                // 根据角度变化粒子大小（闪烁效果）
+                const pulseSize = this.size + Math.sin(this.angle) * 0.5;
+                ctx.arc(this.x, this.y, pulseSize, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // 添加发光效果
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+        
+        // 装饰品类
+        class Ornament {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.size = 8 + Math.random() * 8;
+                this.color = colorThemes[colorTheme][Math.floor(Math.random() * colorThemes[colorTheme].length)];
+                this.angle = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+            }
+            
+            update() {
+                this.angle += this.rotationSpeed;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                
+                if (this.type === 'circle') {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                    
+                    // 添加高光
+                    ctx.beginPath();
+                    ctx.arc(-this.size/3, -this.size/3, this.size/3, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                    ctx.fill();
+                } else if (this.type === 'star') {
+                    drawStar(0, 0, this.size, this.size * 0.5, 5, this.color);
+                } else if (this.type === 'bell') {
+                    drawBell(0, 0, this.size, this.color);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        // 雪花类
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 4 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+                this.wind = Math.random() * 0.5 - 0.25;
+                this.opacity = Math.random() * 0.5 + 0.5;
+            }
+            
+            update() {
+                this.y += this.speed;
+                this.x += this.wind;
+                
+                // 如果雪花超出画布，重新放置到顶部
+                if (this.y > canvas.height) {
+                    this.y = 0;
+                    this.x = Math.random() * canvas.width;
+                }
+                
+                // 水平边界检查
+                if (this.x > canvas.width) {
+                    this.x = 0;
+                } else if (this.x < 0) {
+                    this.x = canvas.width;
+                }
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+        
+        // 绘制星星函数
+        function drawStar(x, y, outerRadius, innerRadius, points, color) {
+            ctx.beginPath();
+            let angle = Math.PI / points;
+            
+            for (let i = 0; i < 2 * points; i++) {
+                let radius = i % 2 === 0 ? outerRadius : innerRadius;
+                let currAngle = i * angle;
+                let px = x + Math.cos(currAngle) * radius;
+                let py = y + Math.sin(currAngle) * radius;
+                
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+            
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+        // 绘制铃铛函数
+        function drawBell(x, y, size, color) {
+            ctx.beginPath();
+            ctx.moveTo(x, y - size);
+            ctx.quadraticCurveTo(x + size/2, y - size/2, x + size, y);
+            ctx.quadraticCurveTo(x, y + size, x - size, y);
+            ctx.quadraticCurveTo(x - size/2, y - size/2, x, y - size);
+            ctx.fillStyle = color;
+            ctx.fill();
+            
+            // 铃铛顶部
+            ctx.beginPath();
+            ctx.arc(x, y - size, size/3, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffd700';
+            ctx.fill();
+        }
+        
+        // 生成圣诞树形状的粒子（修复倒置问题）
+        function generateTreeParticles() {
+            particles = [];
+            const centerX = canvas.width / 2;
+            const treeBottom = canvas.height - 100; // 树底部位置
+            const treeTop = 150; // 树顶部位置
+            const treeHeight = treeBottom - treeTop;
+            const treeWidth = Math.min(canvas.width * 0.4, 300);
+            
+            // 生成树干粒子
+            const trunkWidth = treeWidth * 0.2;
+            const trunkHeight = treeHeight * 0.15;
+            for (let i = 0; i < particleCount * 0.1; i++) {
+                const x = centerX + (Math.random() - 0.5) * trunkWidth;
+                const y = treeBottom - Math.random() * trunkHeight;
+                const color = '#8B4513';
+                particles.push(new Particle(x, y, color));
+            }
+            
+            // 生成树冠粒子（三角形）- 修复倒置问题
+            for (let i = 0; i < particleCount * 0.9; i++) {
+                // 在三角形区域内生成粒子
+                let x, y;
+                let valid = false;
+                
+                while (!valid) {
+                    // 随机位置 - 修正：顶部窄，底部宽
+                    y = treeTop + Math.random() * (treeHeight - trunkHeight);
+                    const layer = (y - treeTop) / (treeHeight - trunkHeight); // 0到1，顶部是0，底部是1
+                    
+                    // 修正：顶部宽度小，底部宽度大
+                    const maxWidthAtLayer = treeWidth * layer;
+                    const halfWidth = maxWidthAtLayer * 0.5;
+                    
+                    x = centerX + (Math.random() - 0.5) * maxWidthAtLayer;
+                    
+                    // 检查是否在三角形内（使用简单的线性关系）
+                    const relativeX = Math.abs(x - centerX);
+                    if (relativeX < halfWidth) {
+                        valid = true;
+                    }
+                }
+                
+                // 根据高度选择颜色（顶部较浅，底部较深）
+                const layer = (y - treeTop) / (treeHeight - trunkHeight);
+                let color;
+                
+                if (colorTheme === 'traditional') {
+                    // 传统红绿色
+                    const greenShade = Math.floor(100 + layer * 155);
+                    // 顶部更多绿色，底部随机添加红色装饰
+                    if (layer > 0.7 && Math.random() > 0.7) {
+                        color = colorThemes[colorTheme][0]; // 红色
+                    } else if (layer > 0.5 && Math.random() > 0.8) {
+                        color = colorThemes[colorTheme][3]; // 金色
+                    } else {
+                        color = `rgb(0, ${greenShade}, 0)`;
+                    }
+                } else if (colorTheme === 'winter') {
+                    // 冬日蓝白色
+                    const blueShade = Math.floor(150 + layer * 105);
+                    color = `rgb(${blueShade}, ${blueShade}, 255)`;
+                } else if (colorTheme === 'rainbow') {
+                    // 彩虹色
+                    const colorIndex = Math.floor(layer * (colorThemes[colorTheme].length - 1));
+                    color = colorThemes[colorTheme][colorIndex];
+                } else {
+                    // 金色主题
+                    const goldShade = Math.floor(150 + layer * 105);
+                    color = `rgb(${goldShade}, ${goldShade * 0.8}, 0)`;
+                }
+                
+                particles.push(new Particle(x, y, color));
+            }
+        }
+        
+        // 添加装饰品（修正位置）
+        function addOrnaments() {
+            ornaments = [];
+            const centerX = canvas.width / 2;
+            const treeBottom = canvas.height - 100;
+            const treeTop = 150;
+            const treeHeight = treeBottom - treeTop;
+            const treeWidth = Math.min(canvas.width * 0.4, 300);
+            
+            // 添加一些装饰品
+            const ornamentCount = 15 + Math.floor(Math.random() * 10);
+            for (let i = 0; i < ornamentCount; i++) {
+                // 修正装饰品位置
+                const layer = Math.random() * 0.8 + 0.2; // 0.2到1.0，避免顶部和树干
+                const y = treeTop + layer * (treeHeight - treeHeight * 0.15);
+                const maxWidthAtLayer = treeWidth * layer;
+                const halfWidth = maxWidthAtLayer * 0.5;
+                const x = centerX + (Math.random() - 0.5) * maxWidthAtLayer * 0.9;
+                
+                // 确保装饰品在树上
+                if (Math.abs(x - centerX) < halfWidth) {
+                    // 随机选择装饰类型
+                    const types = ['circle', 'star', 'bell'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    
+                    ornaments.push(new Ornament(x, y, type));
+                }
+            }
+        }
+        
+        // 生成雪花
+        function generateSnowflakes() {
+            snowflakes = [];
+            for (let i = 0; i < 150; i++) {
+                snowflakes.push(new Snowflake());
+            }
+        }
+        
+        // 鼠标交互
+        const mouse = {
+            x: null,
+            y: null
+        };
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+        
+        // 动画循环
+        function animate() {
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制深色背景
+            ctx.fillStyle = 'rgba(10, 46, 56, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新和绘制雪花
+            if (isSnowing) {
+                for (const flake of snowflakes) {
+                    flake.update();
+                    flake.draw();
+                }
+            }
+            
+            // 更新和绘制粒子
+            for (const particle of particles) {
+                particle.update(mouse);
+                particle.draw();
+            }
+            
+            // 更新和绘制装饰品
+            for (const ornament of ornaments) {
+                ornament.update();
+                ornament.draw();
+            }
+            
+            // 绘制树顶星星
+            const centerX = canvas.width / 2;
+            const treeTop = 150;
+            drawStar(centerX, treeTop - 10, 15, 7, 5, '#ffd700');
+            
+            // 绘制星星发光效果
+            ctx.shadowColor = '#ffd700';
+            ctx.shadowBlur = 20;
+            drawStar(centerX, treeTop - 10, 15, 7, 5, '#ffd700');
+            ctx.shadowBlur = 0;
+            
+            // 绘制地面
+            ctx.fillStyle = 'rgba(139, 69, 19, 0.5)';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            
+            // 绘制一些礼物盒在树下
+            drawGiftBoxes();
+            
+            // 循环动画
+            if (isAnimating) {
+                animationId = requestAnimationFrame(animate);
+            }
+        }
+        
+        // 绘制礼物盒
+        function drawGiftBoxes() {
+            const centerX = canvas.width / 2;
+            const groundY = canvas.height - 50;
+            
+            // 左侧礼物盒
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(centerX - 120, groundY - 40, 40, 40);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(centerX - 120, groundY - 40, 40, 10);
+            ctx.fillRect(centerX - 115, groundY - 40, 5, 40);
+            
+            // 中间礼物盒
+            ctx.fillStyle = '#00aa00';
+            ctx.fillRect(centerX - 20, groundY - 60, 40, 60);
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(centerX - 20, groundY - 60, 40, 15);
+            ctx.fillRect(centerX - 5, groundY - 60, 10, 60);
+            
+            // 右侧礼物盒
+            ctx.fillStyle = '#0044ff';
+            ctx.fillRect(centerX + 80, groundY - 50, 40, 50);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(centerX + 80, groundY - 50, 40, 12);
+            ctx.fillRect(centerX + 95, groundY - 50, 10, 50);
+        }
+        
+        // 初始化
+        function init() {
+            generateTreeParticles();
+            addOrnaments();
+            generateSnowflakes();
+            
+            if (isAnimating) {
+                animate();
+            }
+        }
+        
+        // 控制面板交互
+        document.getElementById('particleCount').addEventListener('input', function() {
+            particleCount = parseInt(this.value);
+            document.getElementById('particleCountValue').textContent = particleCount;
+            generateTreeParticles();
+        });
+        
+        document.getElementById('particleSpeed').addEventListener('input', function() {
+            particleSpeed = parseFloat(this.value);
+            document.getElementById('particleSpeedValue').textContent = particleSpeed.toFixed(1);
+        });
+        
+        document.getElementById('particleSize').addEventListener('input', function() {
+            particleSize = parseFloat(this.value);
+            document.getElementById('particleSizeValue').textContent = particleSize;
+            generateTreeParticles();
+        });
+        
+        document.getElementById('colorTheme').addEventListener('change', function() {
+            colorTheme = this.value;
+            generateTreeParticles();
+            ornaments.forEach(ornament => {
+                ornament.color = colorThemes[colorTheme][Math.floor(Math.random() * colorThemes[colorTheme].length)];
+            });
+        });
+        
+        document.getElementById('toggleAnimation').addEventListener('click', function() {
+            isAnimating = !isAnimating;
+            this.textContent = isAnimating ? '暂停动画' : '继续动画';
+            
+            if (isAnimating) {
+                animate();
+            } else {
+                cancelAnimationFrame(animationId);
+            }
+        });
+        
+        document.getElementById('addOrnaments').addEventListener('click', function() {
+            addOrnaments();
+        });
+        
+        document.getElementById('snowfall').addEventListener('click', function() {
+            isSnowing = !isSnowing;
+            this.textContent = isSnowing ? '关闭下雪' : '下雪效果';
+            
+            if (isSnowing && snowflakes.length === 0) {
+                generateSnowflakes();
+            }
+        });
+        
+        document.getElementById('resetTree').addEventListener('click', function() {
+            // 重置所有控制
+            particleCount = 800;
+            particleSpeed = 1.0;
+            particleSize = 3;
+            colorTheme = 'traditional';
+            
+            document.getElementById('particleCount').value = particleCount;
+            document.getElementById('particleCountValue').textContent = particleCount;
+            document.getElementById('particleSpeed').value = particleSpeed;
+            document.getElementById('particleSpeedValue').textContent = particleSpeed.toFixed(1);
+            document.getElementById('particleSize').value = particleSize;
+            document.getElementById('particleSizeValue').textContent = particleSize;
+            document.getElementById('colorTheme').value = colorTheme;
+            
+            isAnimating = true;
+            document.getElementById('toggleAnimation').textContent = '暂停动画';
+            
+            isSnowing = false;
+            document.getElementById('snowfall').textContent = '下雪效果';
+            
+            // 重新初始化
+            init();
+        });
+        
+        // 开始动画
+        init();
+    </script>
+</body>
+</html>
